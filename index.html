@@ -93,6 +93,9 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 
 /* CARDS PHASE */
 #cards-phase{display:none;flex-direction:column;align-items:center;width:100%;padding:56px 24px 80px}
+#cards-phase.select-mode{padding:0;height:100vh;overflow:hidden;flex-direction:column}
+#cards-phase.select-mode #drawing-hint{flex-shrink:0;padding:20px 24px 12px;font-size:12px;letter-spacing:3px;color:var(--text-dim);text-align:center}
+#cards-phase.select-mode #cards-stage{flex:1;overflow-y:auto;padding:4px 16px 24px;-webkit-overflow-scrolling:touch}
 .drawing-hint{font-size:12px;letter-spacing:3px;color:var(--text-dim);text-align:center;margin-bottom:40px}
 .cards-stage{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;align-items:flex-end}
 .cards-stage.cross{display:grid;grid-template-areas:". top ." "left center right" ". bottom .";grid-template-columns:repeat(3,var(--card-w));gap:12px;justify-items:center;align-items:end}
@@ -390,6 +393,8 @@ function breathEnd() {
 // ── SELECTION GRID ─────────────────────────
 var selectedIndices = [];
 function showSelectionGrid() {
+  var cp = document.getElementById('cards-phase');
+  cp.classList.add('select-mode');
   var stage = document.getElementById('cards-stage');
   stage.innerHTML = '';
   stage.className = 'cards-stage select-grid';
@@ -416,6 +421,7 @@ function showSelectionGrid() {
         if (cnt === needed) {
           document.getElementById('drawing-hint').textContent = '感 受 中 …';
           setTimeout(function() {
+            document.getElementById('cards-phase').classList.remove('select-mode');
             S.drawn = selectedIndices.map(function(i){ return CARDS[i]; });
             renderCards();
           }, 600);

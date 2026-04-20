@@ -344,51 +344,41 @@ var CARDS=[
 ];
 
 // ── STATE ──────────────────────────────────
-var S = { positions: [''], drawn: [], revealedCount: 0 };
+var S = { positions: [''], drawn: [], revealedCount: 0, spreadType: 'single', displayOrder: null };
 
 // ── BREATHING ──────────────────────────────
 var breathActive = false;
-var breathCycles = 0;
 var breathLabelTimer = null;
+var shuffleTimer = null;
 var BREATH_MS = 4000;
 
 function breathStart(e) {
   if (e) e.preventDefault();
   if (breathActive) return;
   breathActive = true;
-  breathCycles = 0;
   var wrap = document.getElementById('breath-ring-wrap');
   wrap.style.setProperty('--bd', BREATH_MS + 'ms');
   wrap.classList.add('breathing');
   document.getElementById('breath-hint').style.opacity = '0';
-  runBreathLabel();
-}
-
-function runBreathLabel() {
-  breathLabelTimer = setTimeout(function() {
-    breathLabelTimer = setTimeout(function() {
-      breathCycles++;
-      if (breathActive) runBreathLabel();
-    }, BREATH_MS / 2);
-  }, BREATH_MS / 2);
+  // Shuffle continuously while holding
+  S.drawn = shuffle(CARDS).slice(0, S.positions.length);
+  shuffleTimer = setInterval(function() {
+    S.drawn = shuffle(CARDS).slice(0, S.positions.length);
+  }, 150);
 }
 
 function breathEnd() {
   if (!breathActive) return;
   breathActive = false;
   clearTimeout(breathLabelTimer);
+  clearInterval(shuffleTimer);
+  shuffleTimer = null;
   var wrap = document.getElementById('breath-ring-wrap');
   wrap.classList.remove('breathing');
-  if (breathCycles >= 1) {
-    document.getElementById('breath-phase').style.display = 'none';
-    showShuffleAnimation(function() {
-      var cp = document.getElementById('cards-phase');
-      cp.style.display = 'flex';
-      renderCards();
-    });
-  } else {
-    document.getElementById('breath-hint').style.opacity = '1';
-  }
+  document.getElementById('breath-phase').style.display = 'none';
+  var cp = document.getElementById('cards-phase');
+  cp.style.display = 'flex';
+  renderCards();
 }
 
 // ── SHUFFLE ANIMATION ──────────────────────
@@ -506,8 +496,10 @@ function pickSpread(type, el) {
     S.displayOrder = null;
     setTimeout(function(){ startDrawing(); }, 250);
   } else if (type==='three') {
+    S.positions = ['', '', ''];
     S.spreadType = 'three';
-    document.getElementById('panel-three').classList.add('visible');
+    S.displayOrder = [1, 0, 2];
+    setTimeout(function(){ startDrawing(); }, 250);
   } else if (type==='cross') {
     S.positions = ['中', '左', '右', '下', '上'];
     S.spreadType = 'cross';
@@ -552,19 +544,17 @@ function startCustom() {
 
 // ── DRAWING ────────────────────────────────
 function startDrawing() {
-  S.drawn = shuffle(CARDS).slice(0, S.positions.length);
   S.revealedCount = 0;
+  S.drawn = [];
 
-  // Reset breath phase
   breathActive = false;
-  breathCycles = 0;
+  clearInterval(shuffleTimer); shuffleTimer = null;
   clearTimeout(breathLabelTimer);
   document.getElementById('breath-ring-wrap').classList.remove('breathing');
   document.getElementById('breath-hint').style.opacity = '1';
   document.getElementById('breath-hint').textContent = '長 按 靜 心';
 
   document.getElementById('breath-phase').style.display = '';
-  document.getElementById('shuffle-phase').style.display = 'none';
   document.getElementById('cards-phase').style.display = 'none';
   document.getElementById('cards-stage').innerHTML = '';
   document.getElementById('reveal-actions').style.display = 'none';

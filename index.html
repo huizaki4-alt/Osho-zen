@@ -95,6 +95,7 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 #cards-phase{display:none;flex-direction:column;align-items:center;width:100%;padding:56px 24px 80px}
 .drawing-hint{font-size:12px;letter-spacing:3px;color:var(--text-dim);text-align:center;margin-bottom:40px}
 .cards-stage{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;align-items:flex-end}
+.cards-stage.cross{display:grid;grid-template-areas:". top ." "left center right" ". bottom .";grid-template-columns:repeat(3,var(--card-w));gap:12px;justify-items:center;align-items:end}
 .card-col{display:flex;flex-direction:column;align-items:center;gap:12px}
 .pos-label{font-size:10px;letter-spacing:4px;color:var(--text-dim);text-align:center;height:16px}
 
@@ -195,15 +196,15 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
   <div class="spread-grid">
     <div class="spread-card" id="sp-single" onclick="pickSpread('single',this)">
       <div class="spread-pips">◆</div>
-      <div><div class="spread-name">單牌</div><div class="spread-desc">當下一張，直指核心</div></div>
+      <div><div class="spread-name">單牌</div></div>
     </div>
     <div class="spread-card" id="sp-three" onclick="pickSpread('three',this)">
       <div class="spread-pips">◆ ◆ ◆</div>
-      <div><div class="spread-name">三牌</div><div class="spread-desc">三個面向，立體觀照</div></div>
+      <div><div class="spread-name">三牌</div></div>
     </div>
-    <div class="spread-card" id="sp-custom" onclick="pickSpread('custom',this)">
-      <div class="spread-pips">◆ · · ·</div>
-      <div><div class="spread-name">自訂</div><div class="spread-desc">自由選擇張數（1–10）</div></div>
+    <div class="spread-card" id="sp-custom" onclick="pickSpread('cross',this)">
+      <div class="spread-pips">✦</div>
+      <div><div class="spread-name">十字牌陣</div></div>
     </div>
   </div>
   <div class="sub-panel" id="panel-three">
@@ -501,11 +502,17 @@ function pickSpread(type, el) {
   for (var i=0;i<opts.length;i++) opts[i].classList.remove('selected');
   if (type==='single') {
     S.positions = [''];
+    S.spreadType = 'single';
+    S.displayOrder = null;
     setTimeout(function(){ startDrawing(); }, 250);
   } else if (type==='three') {
+    S.spreadType = 'three';
     document.getElementById('panel-three').classList.add('visible');
-  } else if (type==='custom') {
-    document.getElementById('panel-custom').classList.add('visible');
+  } else if (type==='cross') {
+    S.positions = ['中', '左', '右', '下', '上'];
+    S.spreadType = 'cross';
+    S.displayOrder = null;
+    setTimeout(function(){ startDrawing(); }, 250);
   }
 }
 
@@ -514,6 +521,7 @@ function pickPositions(el, positions) {
   for (var i=0;i<opts.length;i++) opts[i].classList.remove('selected');
   el.classList.add('selected');
   S.positions = positions;
+  S.displayOrder = [1, 0, 2];
   setTimeout(function(){ startDrawing(); }, 250);
 }
 
@@ -573,32 +581,40 @@ function renderCards() {
   document.getElementById('drawing-hint').textContent =
     count===1 ? '靜 心 ⸺ 點 擊 牌 面' : '靜 心 ⸺ 逐 一 翻 開（共 '+count+' 張）';
 
-  for (var i=0; i<S.drawn.length; i++) {
-    (function(idx){
-      var card = S.drawn[idx];
+  var isCross = S.spreadType === 'cross';
+  stage.className = isCross ? 'cards-stage cross' : 'cards-stage';
+
+  // displayOrder[displayIdx] = drawnIdx
+  var crossAreas = ['center','left','right','bottom','top'];
+  var order = S.displayOrder || S.drawn.map(function(_,i){return i;});
+
+  for (var d=0; d<order.length; d++) {
+    (function(dispIdx, drawnIdx){
+      var card = S.drawn[drawnIdx];
       var col = document.createElement('div');
       col.className = 'card-col fade-in';
-      col.style.animationDelay = (idx*0.1)+'s';
+      col.style.animationDelay = (dispIdx*0.1)+'s';
+      if (isCross) col.style.gridArea = crossAreas[drawnIdx];
 
       var posLbl = document.createElement('div');
       posLbl.className = 'pos-label';
-      posLbl.textContent = S.positions[idx] || '';
+      posLbl.textContent = S.positions[drawnIdx] || '';
       col.appendChild(posLbl);
 
       var wrap = document.createElement('div');
       wrap.className = 'card-wrap waiting';
-      wrap.id = 'cw-'+idx;
+      wrap.id = 'cw-'+dispIdx;
       wrap.onclick = function(){
-    if (wrap.classList.contains('revealed')) {
-      openLightbox(card.name);
-    } else {
-      revealCard(idx);
-    }
-  };
+        if (wrap.classList.contains('revealed')) {
+          openLightbox(card.name);
+        } else {
+          revealCard(dispIdx);
+        }
+      };
 
       var inner = document.createElement('div');
       inner.className = 'card-inner';
-      inner.id = 'ci-inner-'+idx;
+      inner.id = 'ci-inner-'+dispIdx;
       inner.innerHTML =
         '<div class="card-back"><div class="card-back-inner"></div></div>' +
         '<div class="card-front"><div class="card-img-zone"><img src="'+getCardImg(card.name)+'" alt="'+card.name+'"></div></div>';
@@ -606,7 +622,7 @@ function renderCards() {
       wrap.appendChild(inner);
       col.appendChild(wrap);
       stage.appendChild(col);
-    })(i);
+    })(d, order[d]);
   }
 }
 

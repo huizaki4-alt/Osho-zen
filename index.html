@@ -96,6 +96,12 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 .drawing-hint{font-size:12px;letter-spacing:3px;color:var(--text-dim);text-align:center;margin-bottom:40px}
 .cards-stage{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;align-items:flex-end}
 .cards-stage.cross{display:grid;grid-template-areas:". top ." "left center right" ". bottom .";grid-template-columns:repeat(3,var(--card-w));gap:12px;justify-items:center;align-items:end}
+.cards-stage.select-grid{gap:6px;flex-wrap:wrap;align-items:flex-start;padding-top:4px}
+.card-wrap.mini{width:58px;height:96px;animation:none !important;cursor:pointer}
+.card-wrap.mini .card-back{border-color:var(--border)}
+.card-wrap.mini .card-back-inner{inset:6px}
+.card-wrap.mini .card-back-glyph{font-size:16px}
+.card-wrap.mini.sel .card-back{border-color:var(--gold);box-shadow:0 0 12px rgba(201,169,110,.5)}
 .card-col{display:flex;flex-direction:column;align-items:center;gap:12px}
 .pos-label{font-size:10px;letter-spacing:4px;color:var(--text-dim);text-align:center;height:16px}
 
@@ -378,7 +384,53 @@ function breathEnd() {
   document.getElementById('breath-phase').style.display = 'none';
   var cp = document.getElementById('cards-phase');
   cp.style.display = 'flex';
-  renderCards();
+  showSelectionGrid();
+}
+
+// ── SELECTION GRID ─────────────────────────
+var selectedIndices = [];
+function showSelectionGrid() {
+  var stage = document.getElementById('cards-stage');
+  stage.innerHTML = '';
+  stage.className = 'cards-stage select-grid';
+  selectedIndices = [];
+  var needed = S.positions.length;
+  document.getElementById('drawing-hint').textContent = '憑 直 覺 揀 ' + needed + ' 張';
+  var allCards = shuffle(CARDS.slice());
+  allCards.forEach(function(card) {
+    var origIdx = CARDS.indexOf(card);
+    var wrap = document.createElement('div');
+    wrap.className = 'card-wrap mini';
+    wrap.onclick = function() {
+      if (wrap.classList.contains('sel')) {
+        wrap.classList.remove('sel');
+        var pos = selectedIndices.indexOf(origIdx);
+        if (pos > -1) selectedIndices.splice(pos, 1);
+        document.getElementById('drawing-hint').textContent =
+          '憑 直 覺 揀（' + selectedIndices.length + ' / ' + needed + '）';
+      } else {
+        if (selectedIndices.length >= needed) return;
+        wrap.classList.add('sel');
+        selectedIndices.push(origIdx);
+        var cnt = selectedIndices.length;
+        if (cnt === needed) {
+          document.getElementById('drawing-hint').textContent = '感 受 中 …';
+          setTimeout(function() {
+            S.drawn = selectedIndices.map(function(i){ return CARDS[i]; });
+            renderCards();
+          }, 600);
+        } else {
+          document.getElementById('drawing-hint').textContent =
+            '憑 直 覺 揀（' + cnt + ' / ' + needed + '）';
+        }
+      }
+    };
+    var inner = document.createElement('div');
+    inner.className = 'card-inner';
+    inner.innerHTML = '<div class="card-back"><div class="card-back-inner"></div></div><div class="card-front" style="transform:rotateY(180deg)"></div>';
+    wrap.appendChild(inner);
+    stage.appendChild(wrap);
+  });
 }
 
 // ── SHUFFLE ANIMATION ──────────────────────

@@ -480,8 +480,10 @@ function goTo(id) {
   var screens = document.querySelectorAll('.screen');
   for (var i=0;i<screens.length;i++) screens[i].classList.remove('active');
   document.getElementById(id).classList.add('active');
+  document.body.style.overflow = (id === 'screen-home') ? 'hidden' : '';
   window.scrollTo(0,0);
 }
+document.body.style.overflow = 'hidden';
 
 // ── NAVIGATION ─────────────────────────────
 function goToSpread() {

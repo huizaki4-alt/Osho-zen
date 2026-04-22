@@ -391,6 +391,7 @@ function breathEnd() {
 
 // ── SELECTION GRID ─────────────────────────
 var selectedIndices = [];
+var gridReady = false;
 function showSelectionGrid() {
   var cp = document.getElementById('cards-phase');
   cp.classList.add('select-mode');
@@ -399,6 +400,7 @@ function showSelectionGrid() {
   stage.className = 'cards-stage select-grid';
   document.getElementById('reveal-actions').style.display = 'none';
   selectedIndices = [];
+  gridReady = false;
   var needed = S.positions.length;
   document.getElementById('drawing-hint').textContent = '憑 直 覺 揀 ' + needed + ' 張';
   var allCards = shuffle(CARDS.slice());
@@ -407,6 +409,7 @@ function showSelectionGrid() {
     var wrap = document.createElement('div');
     wrap.className = 'card-wrap mini';
     wrap.onclick = function() {
+      if (!gridReady) return;
       if (wrap.classList.contains('sel')) {
         wrap.classList.remove('sel');
         var pos = selectedIndices.indexOf(origIdx);
@@ -444,12 +447,13 @@ function showSelectionGrid() {
     var cols = 9, gap = 3, padW = 5, padH = 4;
     var rows = Math.ceil(79 / cols);
     var availW = window.innerWidth - padW * 2;
-    var availH = window.innerHeight - hintBottom - 48 - padH; // 48px bottom safe area
+    var availH = window.innerHeight - hintBottom - 48 - padH;
     var cardW = Math.floor((availW - gap * (cols - 1)) / cols);
     var cardH = Math.floor((availH - gap * (rows - 1)) / rows);
     stage.style.gridTemplateColumns = 'repeat(' + cols + ', ' + cardW + 'px)';
     stage.style.gridAutoRows = cardH + 'px';
     stage.style.padding = '0 ' + padW + 'px ' + padH + 'px';
+    gridReady = true;
   }); });
 }
 

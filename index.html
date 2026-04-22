@@ -436,20 +436,20 @@ function showSelectionGrid() {
     wrap.appendChild(inner);
     stage.appendChild(wrap);
   });
-  // Fit all 79 cards without scrolling
-  requestAnimationFrame(function() {
+  // Fit all 79 cards without scrolling — use double-RAF for accurate layout measurements
+  requestAnimationFrame(function() { requestAnimationFrame(function() {
     var hintEl = document.getElementById('drawing-hint');
-    var hintH = hintEl.getBoundingClientRect().height + 14;
-    var cols = 9, gap = 3, padW = 6, padH = 6;
+    var hintBottom = hintEl.getBoundingClientRect().bottom;
+    var cols = 9, gap = 3, padW = 5, padH = 4;
     var rows = Math.ceil(79 / cols);
     var availW = window.innerWidth - padW * 2;
-    var availH = window.innerHeight - hintH - padH;
+    var availH = window.innerHeight - hintBottom - 48 - padH; // 48px bottom safe area
     var cardW = Math.floor((availW - gap * (cols - 1)) / cols);
     var cardH = Math.floor((availH - gap * (rows - 1)) / rows);
     stage.style.gridTemplateColumns = 'repeat(' + cols + ', ' + cardW + 'px)';
     stage.style.gridAutoRows = cardH + 'px';
     stage.style.padding = '0 ' + padW + 'px ' + padH + 'px';
-  });
+  }); });
 }
 
 // ── SHUFFLE ANIMATION ──────────────────────

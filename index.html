@@ -392,7 +392,7 @@ function breathEnd() {
 // ── SELECTION GRID ─────────────────────────
 var selectedIndices = [];
 var gridReady = false;
-function showSelectionGrid() {
+function showSelectionGrid(appendMode) {
   var cp = document.getElementById('cards-phase');
   cp.classList.add('select-mode');
   var stage = document.getElementById('cards-stage');
@@ -401,9 +401,11 @@ function showSelectionGrid() {
   document.getElementById('reveal-actions').style.display = 'none';
   selectedIndices = [];
   gridReady = false;
-  var needed = S.positions.length;
-  document.getElementById('drawing-hint').textContent = '憑 直 覺 揀 ' + needed + ' 張';
-  var allCards = shuffle(CARDS.slice());
+  var needed = appendMode ? 1 : S.positions.length;
+  var hintText = appendMode ? '憑 直 覺 追 加 1 張' : '憑 直 覺 揀 ' + needed + ' 張';
+  document.getElementById('drawing-hint').textContent = hintText;
+  var excludeNames = appendMode ? S.drawn.map(function(c){return c.name;}) : [];
+  var allCards = shuffle(CARDS.slice()).filter(function(c){ return excludeNames.indexOf(c.name) === -1; });
   allCards.forEach(function(card) {
     var origIdx = CARDS.indexOf(card);
     var wrap = document.createElement('div');
@@ -425,8 +427,12 @@ function showSelectionGrid() {
           document.getElementById('drawing-hint').textContent = '感 受 中 …';
           setTimeout(function() {
             document.getElementById('cards-phase').classList.remove('select-mode');
-            S.drawn = selectedIndices.map(function(i){ return CARDS[i]; });
-            renderCards();
+            if (appendMode) {
+              appendOneCard(CARDS[selectedIndices[0]]);
+            } else {
+              S.drawn = selectedIndices.map(function(i){ return CARDS[i]; });
+              renderCards();
+            }
           }, 600);
         } else {
           document.getElementById('drawing-hint').textContent =
@@ -445,7 +451,7 @@ function showSelectionGrid() {
     var hintEl = document.getElementById('drawing-hint');
     var hintBottom = hintEl.getBoundingClientRect().bottom;
     var cols = 9, gap = 3, padW = 5, padH = 4;
-    var rows = Math.ceil(79 / cols);
+    var rows = Math.ceil(stage.children.length / cols);
     var availW = window.innerWidth - padW * 2;
     var availH = window.innerHeight - hintBottom - 48 - padH;
     var cardW = Math.floor((availW - gap * (cols - 1)) / cols);
@@ -707,6 +713,23 @@ function revealCard(i) {
   }
 }
 
+function appendOneCard(card) {
+  var prevRevealed = S.revealedCount;
+  S.drawn.push(card);
+  S.positions.push('');
+  if (S.displayOrder) S.displayOrder.push(S.drawn.length - 1);
+  renderCards();
+  // Pre-flip previously revealed cards without animation
+  for (var i = 0; i < prevRevealed; i++) {
+    var inner = document.getElementById('ci-inner-' + i);
+    var wrap  = document.getElementById('cw-' + i);
+    if (inner) { inner.style.transition = 'none'; inner.classList.add('flipped'); }
+    if (wrap)  { wrap.classList.remove('waiting'); wrap.classList.add('revealed'); }
+    S.revealedCount++;
+  }
+  document.getElementById('drawing-hint').textContent = '點 擊 新 牌 翻 開';
+}
+
 function showActions() {
   var box = document.getElementById('reveal-actions');
   box.style.display = 'flex';
@@ -718,8 +741,7 @@ function showActions() {
   h += '<div class="ornament-line"></div>';
   h += '<span class="ornament-symbol">&#9670;</span>';
   h += '<div class="ornament-line rev"></div></div>';
-  h += '<button class="btn" onclick="startDrawing()">再 次 占 卜</button>';
-  h += '<button class="btn btn-muted" onclick="goToSpread()">更 換 牌 陣</button>';
+  h += '<button class="btn" onclick="showSelectionGrid(true)">追 加 一 牌</button>';
   h += '<button class="btn btn-muted" onclick="goTo(\u0022screen-home\u0022)" style="margin-top:4px;">回 到 首 頁</button>';
   box.innerHTML = h;
 }

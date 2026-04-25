@@ -95,7 +95,7 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 #cards-phase{display:none;flex-direction:column;align-items:center;width:100%;padding:56px 24px 80px}
 .drawing-hint{font-size:12px;letter-spacing:3px;color:var(--text-dim);text-align:center;margin-bottom:40px}
 .cards-stage{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;align-items:flex-end}
-.cards-stage.cross{--card-w:clamp(80px,calc((100vw - 100px) / 3),130px);--card-h:calc(var(--card-w) * 1.648);display:grid;grid-template-areas:". top ." "left center right" ". bottom .";grid-template-columns:repeat(3,var(--card-w));gap:8px;justify-items:center;align-items:center}
+.cards-stage.cross{display:grid;grid-template-areas:". top ." "left center right" ". bottom .";grid-template-columns:repeat(3,var(--card-w));gap:8px;justify-items:center;align-items:center}
 .cards-stage.select-grid{display:grid;gap:3px;justify-content:center;padding:0 8px 8px;overflow:hidden}
 #cards-phase.select-mode{position:fixed;inset:0;z-index:50;background:var(--bg);padding:0;overflow:hidden;flex-direction:column}
 #cards-phase.select-mode #drawing-hint{flex-shrink:0;padding:12px 16px 6px;text-align:center}
@@ -695,6 +695,16 @@ function renderCards() {
       col.appendChild(wrap);
       stage.appendChild(col);
     })(d, order[d]);
+  }
+  if (isCross) {
+    requestAnimationFrame(function() {
+      var ph = document.getElementById('cards-phase');
+      var phW = ph.getBoundingClientRect().width;
+      var colW = Math.floor((phW - 16) / 3);
+      var colH = Math.floor(colW * 1.645);
+      stage.style.setProperty('--card-w', colW + 'px');
+      stage.style.setProperty('--card-h', colH + 'px');
+    });
   }
 }
 

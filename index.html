@@ -669,10 +669,12 @@ function renderCards() {
       col.style.animationDelay = (dispIdx*0.1)+'s';
       if (isCross) col.style.gridArea = crossAreas[drawnIdx];
 
-      var posLbl = document.createElement('div');
-      posLbl.className = 'pos-label';
-      posLbl.textContent = S.positions[drawnIdx] || '';
-      col.appendChild(posLbl);
+      if (!isCross) {
+        var posLbl = document.createElement('div');
+        posLbl.className = 'pos-label';
+        posLbl.textContent = S.positions[drawnIdx] || '';
+        col.appendChild(posLbl);
+      }
 
       var wrap = document.createElement('div');
       wrap.className = 'card-wrap waiting';

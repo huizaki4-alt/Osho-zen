@@ -649,6 +649,7 @@ function renderCards() {
   var count = S.positions.length;
   var stage = document.getElementById('cards-stage');
   stage.innerHTML = '';
+  stage.style.cssText = ''; // clear inline styles from selection grid
   document.getElementById('reveal-actions').style.display = 'none';
   document.getElementById('drawing-hint').textContent =
     count===1 ? '靜 心 ⸺ 點 擊 牌 面' : '靜 心 ⸺ 逐 一 翻 開（共 '+count+' 張）';

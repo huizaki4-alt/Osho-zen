@@ -101,8 +101,8 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 #cards-phase.select-mode #drawing-hint{flex-shrink:0;padding:12px 16px 6px;text-align:center}
 .card-wrap.mini{width:100% !important;height:100% !important;animation:none !important;cursor:pointer}
 .card-wrap.mini .card-inner{width:100% !important;height:100% !important}
-.card-wrap.mini .card-back-inner{inset:4px}
-.card-wrap.mini .card-back-glyph{font-size:12px}
+.card-wrap.mini .card-back-inner{inset:4px;display:none}
+.card-wrap.mini .card-back-glyph{display:none}
 .card-wrap.mini.sel .card-back{border-color:var(--gold);box-shadow:0 0 10px rgba(201,169,110,.4)}
 .card-col{display:flex;flex-direction:column;align-items:center;gap:12px}
 .pos-label{font-size:10px;letter-spacing:4px;color:var(--text-dim);text-align:center;height:16px}
@@ -180,6 +180,10 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 .s-card::before{content:"";position:absolute;inset:10px;border:1px solid var(--border);border-radius:3px}
 .s-card::after{content:"禪";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:"Cinzel",serif;font-size:22px;color:var(--gold);opacity:.18}
 .shuffle-hint{font-size:11px;letter-spacing:6px;color:var(--text-dim);text-align:center;transition:opacity .4s}
+
+@keyframes water-ripple{0%{transform:scale(0.2);opacity:.8}80%{opacity:.15}100%{transform:scale(4.5);opacity:0}}
+.card-wrap.mini .card-back::before,.card-wrap.mini .card-back::after{content:'';position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;border:1.5px solid rgba(201,169,110,.6);animation:water-ripple 2.6s ease-out infinite}
+.card-wrap.mini .card-back::after{animation-delay:1.3s}
 </style>
 </head>
 <body>

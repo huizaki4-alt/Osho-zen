@@ -182,8 +182,9 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 .shuffle-hint{font-size:11px;letter-spacing:6px;color:var(--text-dim);text-align:center;transition:opacity .4s}
 
 @keyframes water-ripple{0%{transform:scale(0.2);opacity:.8}80%{opacity:.15}100%{transform:scale(4.5);opacity:0}}
-.card-wrap.mini .card-back::before,.card-wrap.mini .card-back::after{content:'';position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;border:1.5px solid rgba(201,169,110,.6);animation:water-ripple 2.6s ease-out infinite}
-.card-wrap.mini .card-back::after{animation-delay:1.3s}
+.card-wrap.mini .card-back{border:none !important;box-shadow:none !important;overflow:visible}
+.card-wrap.mini .card-back::before,.card-wrap.mini .card-back::after{content:'';position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:1.5px solid rgba(201,169,110,.55);animation:water-ripple 2.6s ease-out infinite;animation-delay:var(--r1,0s)}
+.card-wrap.mini .card-back::after{animation-delay:var(--r2,1.3s)}
 </style>
 </head>
 <body>
@@ -414,6 +415,10 @@ function showSelectionGrid(appendMode) {
     var origIdx = CARDS.indexOf(card);
     var wrap = document.createElement('div');
     wrap.className = 'card-wrap mini';
+    var r1 = (Math.random() * 2.6).toFixed(2);
+    var r2 = (Math.random() * 2.6).toFixed(2);
+    wrap.style.setProperty('--r1', r1 + 's');
+    wrap.style.setProperty('--r2', r2 + 's');
     wrap.onclick = function() {
       if (!gridReady) return;
       if (wrap.classList.contains('sel')) {

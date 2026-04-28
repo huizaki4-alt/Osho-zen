@@ -180,11 +180,10 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 .s-card::before{content:"";position:absolute;inset:10px;border:1px solid var(--border);border-radius:3px}
 .s-card::after{content:"禪";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:"Cinzel",serif;font-size:22px;color:var(--gold);opacity:.18}
 .shuffle-hint{font-size:11px;letter-spacing:6px;color:var(--text-dim);text-align:center;transition:opacity .4s}
-
-@keyframes water-ripple{0%{transform:scale(0.2);opacity:.8}80%{opacity:.15}100%{transform:scale(4.5);opacity:0}}
+80%{opacity:.15}100%{transform:scale(4.5);opacity:0}}
 .card-wrap.mini .card-back{background:transparent !important;border:none !important;box-shadow:none !important;overflow:hidden}
-.card-wrap.mini .card-back::before,.card-wrap.mini .card-back::after{content:'';position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:1.5px solid rgba(201,169,110,.55);animation:water-ripple 2.6s ease-out infinite;animation-delay:var(--r1,0s)}
-.card-wrap.mini .card-back::after{animation-delay:var(--r2,1.3s)}
+
+.water-drop-icon{width:42%;height:auto;display:block;margin:auto;opacity:.65}
 </style>
 </head>
 <body>
@@ -415,10 +414,6 @@ function showSelectionGrid(appendMode) {
     var origIdx = CARDS.indexOf(card);
     var wrap = document.createElement('div');
     wrap.className = 'card-wrap mini';
-    var r1 = (Math.random() * 2.6).toFixed(2);
-    var r2 = (Math.random() * 2.6).toFixed(2);
-    wrap.style.setProperty('--r1', r1 + 's');
-    wrap.style.setProperty('--r2', r2 + 's');
     wrap.onclick = function() {
       if (!gridReady) return;
       if (wrap.classList.contains('sel')) {
@@ -451,7 +446,7 @@ function showSelectionGrid(appendMode) {
     };
     var inner = document.createElement('div');
     inner.className = 'card-inner';
-    inner.innerHTML = '<div class="card-back"><div class="card-back-inner"></div></div><div class="card-front" style="transform:rotateY(180deg)"></div>';
+    inner.innerHTML = '<div class="card-back"><svg class=\"water-drop-icon\" viewBox=\"0 0 20 30\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M10 2 C5 10 4 15 4 22 A6 6 0 0 0 16 22 C16 15 15 10 10 2Z\" stroke=\"rgba(201,169,110,0.65)\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></svg></div><div class="card-front" style="transform:rotateY(180deg)"></div>';
     wrap.appendChild(inner);
     stage.appendChild(wrap);
   });

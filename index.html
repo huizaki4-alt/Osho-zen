@@ -356,7 +356,7 @@ var CARDS=[
 ];
 
 // ── STATE ──────────────────────────────────
-var S = { positions: [''], drawn: [], revealedCount: 0, spreadType: 'single', displayOrder: null };
+var S = { positions: [''], drawn: [], revealedCount: 0, spreadType: 'single', displayOrder: null, appendedCards: [] };
 
 // ── BREATHING ──────────────────────────────
 var breathActive = false;
@@ -632,6 +632,7 @@ function startCustom() {
 function startDrawing() {
   S.revealedCount = 0;
   S.drawn = [];
+  S.appendedCards = [];
 
   breathActive = false;
   clearInterval(shuffleTimer); shuffleTimer = null;
@@ -739,56 +740,77 @@ function revealCard(i) {
 }
 
 function appendOneCard(card) {
-  S.drawn.push(card);
-  S.positions.push('');
-  var drawnIdx = S.drawn.length - 1;
+  S.appendedCards.push(card);
+  var prevRevealed = S.revealedCount;
 
+  // Restore main spread (clears selection grid from cards-stage)
+  renderCards();
+
+  // Pre-flip already-revealed main spread cards (no animation)
+  for (var i = 0; i < prevRevealed; i++) {
+    var inn = document.getElementById('ci-inner-' + i);
+    var wrp = document.getElementById('cw-' + i);
+    if (inn) { inn.style.transition = 'none'; inn.classList.add('flipped'); }
+    if (wrp) { wrp.classList.remove('waiting'); wrp.classList.add('revealed'); }
+    S.revealedCount++;
+  }
+
+  // Build append-stage below main spread
   var cp = document.getElementById('cards-phase');
   var ra = document.getElementById('reveal-actions');
 
-  // Create separator + append-stage once
+  // Separator (once)
   if (!document.getElementById('append-stage')) {
     var sep = document.createElement('div');
+    sep.id = 'append-sep';
     sep.className = 'ornament';
-    sep.style.cssText = 'margin:24px 0 8px;width:60%';
+    sep.style.cssText = 'margin:28px 0 12px;width:55%';
     sep.innerHTML = '<div class="ornament-line"></div><span class="ornament-symbol">&#9670;</span><div class="ornament-line rev"></div>';
     cp.insertBefore(sep, ra);
     var ast = document.createElement('div');
     ast.id = 'append-stage';
-    ast.style.cssText = 'display:flex;justify-content:center;gap:12px;flex-wrap:wrap;width:100%';
+    ast.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:20px;width:100%';
     cp.insertBefore(ast, ra);
   }
-  var appendStage = document.getElementById('append-stage');
 
-  var col = document.createElement('div');
-  col.className = 'card-col fade-in';
-  var wrap = document.createElement('div');
-  wrap.className = 'card-wrap waiting';
-  wrap.id = 'cw-ap-' + drawnIdx;
-  (function(idx, c) {
-    wrap.onclick = function() {
-      if (wrap.classList.contains('revealed')) {
-        openLightbox(c.name);
-      } else {
-        var inner = document.getElementById('ci-ap-' + idx);
-        if (!inner || inner.classList.contains('flipped')) return;
-        inner.classList.add('flipped');
-        wrap.classList.remove('waiting');
-        wrap.classList.add('revealed');
-        document.getElementById('drawing-hint').textContent = '';
-        showActions();
-      }
-    };
-  })(drawnIdx, card);
-  var inner = document.createElement('div');
-  inner.className = 'card-inner';
-  inner.id = 'ci-ap-' + drawnIdx;
-  inner.innerHTML = '<div class="card-back"><div class="card-back-inner"></div></div><div class="card-front"><div class="card-img-zone"><img src="'+getCardImg(card.name)+'" alt="'+card.name+'"></div></div>';
-  wrap.appendChild(inner);
-  col.appendChild(wrap);
-  appendStage.appendChild(col);
+  // Render all appended cards
+  var appendStage = document.getElementById('append-stage');
+  appendStage.innerHTML = '';
+  var unflippedIdx = -1;
+  S.appendedCards.forEach(function(c, ai) {
+    var col = document.createElement('div');
+    col.className = 'card-col fade-in';
+    var wrap = document.createElement('div');
+    var isLast = (ai === S.appendedCards.length - 1);
+    wrap.className = 'card-wrap' + (isLast ? ' waiting' : ' revealed');
+    wrap.id = 'cw-ap-' + ai;
+    (function(idx, card, last) {
+      wrap.onclick = function() {
+        if (wrap.classList.contains('revealed')) {
+          openLightbox(card.name);
+        } else if (last) {
+          var inner = document.getElementById('ci-ap-' + idx);
+          if (!inner || inner.classList.contains('flipped')) return;
+          inner.classList.add('flipped');
+          wrap.classList.remove('waiting');
+          wrap.classList.add('revealed');
+          document.getElementById('drawing-hint').textContent = '';
+          showActions();
+        }
+      };
+    })(ai, c, isLast);
+    var inner = document.createElement('div');
+    inner.className = 'card-inner' + (isLast ? '' : ' flipped');
+    inner.id = 'ci-ap-' + ai;
+    inner.innerHTML = '<div class="card-back"><div class="card-back-inner"></div></div><div class="card-front"><div class="card-img-zone"><img src="'+getCardImg(c.name)+'" alt="'+c.name+'"></div></div>';
+    wrap.appendChild(inner);
+    col.appendChild(wrap);
+    appendStage.appendChild(col);
+  });
+
   document.getElementById('drawing-hint').textContent = '點 擊 新 牌 翻 開';
 }
+
 
 function showActions() {
   var box = document.getElementById('reveal-actions');

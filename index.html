@@ -413,7 +413,7 @@ function showSelectionGrid(appendMode) {
   var needed = appendMode ? 1 : S.positions.length;
   var hintText = appendMode ? '憑 直 覺 追 加 1 張' : '憑 直 覺 揀 ' + needed + ' 張';
   document.getElementById('drawing-hint').textContent = hintText;
-  var excludeNames = appendMode ? S.drawn.map(function(c){return c.name;}) : [];
+  var excludeNames = appendMode ? S.drawn.map(function(c){return c.name;}).concat(S.appendedCards.map(function(c){return c.name;})) : [];
   var allCards = shuffle(CARDS.slice()).filter(function(c){ return excludeNames.indexOf(c.name) === -1; });
   allCards.forEach(function(card) {
     var origIdx = CARDS.indexOf(card);

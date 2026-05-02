@@ -403,6 +403,11 @@ function showSelectionGrid(appendMode) {
   stage.innerHTML = '';
   stage.className = 'cards-stage select-grid';
   document.getElementById('reveal-actions').style.display = 'none';
+  // Hide append-stage and separator during selection overlay
+  var _ast = document.getElementById('append-stage');
+  var _sep = document.getElementById('append-sep');
+  if (_ast) _ast.style.display = 'none';
+  if (_sep) _sep.style.display = 'none';
   selectedIndices = [];
   gridReady = false;
   var needed = appendMode ? 1 : S.positions.length;

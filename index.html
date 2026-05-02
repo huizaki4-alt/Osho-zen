@@ -654,6 +654,9 @@ function renderCards() {
   var stage = document.getElementById('cards-stage');
   stage.innerHTML = '';
   stage.style.cssText = ''; // clear inline styles from selection grid
+  // Remove any previous append-stage and separators
+  var ast = document.getElementById('append-stage');
+  if (ast) { var prev = ast.previousSibling; ast.remove(); if (prev && prev.className && prev.className.indexOf('ornament') > -1) prev.remove(); }
   document.getElementById('reveal-actions').style.display = 'none';
   document.getElementById('drawing-hint').textContent =
     count===1 ? '靜 心 ⸺ 點 擊 牌 面' : '靜 心 ⸺ 逐 一 翻 開（共 '+count+' 張）';
@@ -736,19 +739,54 @@ function revealCard(i) {
 }
 
 function appendOneCard(card) {
-  var prevRevealed = S.revealedCount;
   S.drawn.push(card);
   S.positions.push('');
-  if (S.displayOrder) S.displayOrder.push(S.drawn.length - 1);
-  renderCards();
-  // Pre-flip previously revealed cards without animation
-  for (var i = 0; i < prevRevealed; i++) {
-    var inner = document.getElementById('ci-inner-' + i);
-    var wrap  = document.getElementById('cw-' + i);
-    if (inner) { inner.style.transition = 'none'; inner.classList.add('flipped'); }
-    if (wrap)  { wrap.classList.remove('waiting'); wrap.classList.add('revealed'); }
-    S.revealedCount++;
+  var drawnIdx = S.drawn.length - 1;
+
+  var cp = document.getElementById('cards-phase');
+  var ra = document.getElementById('reveal-actions');
+
+  // Create separator + append-stage once
+  if (!document.getElementById('append-stage')) {
+    var sep = document.createElement('div');
+    sep.className = 'ornament';
+    sep.style.cssText = 'margin:24px 0 8px;width:60%';
+    sep.innerHTML = '<div class="ornament-line"></div><span class="ornament-symbol">&#9670;</span><div class="ornament-line rev"></div>';
+    cp.insertBefore(sep, ra);
+    var ast = document.createElement('div');
+    ast.id = 'append-stage';
+    ast.style.cssText = 'display:flex;justify-content:center;gap:12px;flex-wrap:wrap;width:100%';
+    cp.insertBefore(ast, ra);
   }
+  var appendStage = document.getElementById('append-stage');
+
+  var col = document.createElement('div');
+  col.className = 'card-col fade-in';
+  var wrap = document.createElement('div');
+  wrap.className = 'card-wrap waiting';
+  wrap.id = 'cw-ap-' + drawnIdx;
+  (function(idx, c) {
+    wrap.onclick = function() {
+      if (wrap.classList.contains('revealed')) {
+        openLightbox(c.name);
+      } else {
+        var inner = document.getElementById('ci-ap-' + idx);
+        if (!inner || inner.classList.contains('flipped')) return;
+        inner.classList.add('flipped');
+        wrap.classList.remove('waiting');
+        wrap.classList.add('revealed');
+        document.getElementById('drawing-hint').textContent = '';
+        showActions();
+      }
+    };
+  })(drawnIdx, card);
+  var inner = document.createElement('div');
+  inner.className = 'card-inner';
+  inner.id = 'ci-ap-' + drawnIdx;
+  inner.innerHTML = '<div class="card-back"><div class="card-back-inner"></div></div><div class="card-front"><div class="card-img-zone"><img src="'+getCardImg(card.name)+'" alt="'+card.name+'"></div></div>';
+  wrap.appendChild(inner);
+  col.appendChild(wrap);
+  appendStage.appendChild(col);
   document.getElementById('drawing-hint').textContent = '點 擊 新 牌 翻 開';
 }
 

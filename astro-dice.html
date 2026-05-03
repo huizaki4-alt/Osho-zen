@@ -85,6 +85,12 @@
     line-height:1;font-variant-emoji:text;
   }
 
+  /* Zodiac sign SVG text */
+  #sym2{transition:opacity 0.12s;filter:drop-shadow(0 0 5px rgba(240,215,120,0.8)) drop-shadow(0 0 14px rgba(240,180,60,0.5));}
+  .die.rolled #sym2{fill:#fffae8;filter:drop-shadow(0 0 8px rgba(255,250,200,0.95)) drop-shadow(0 0 22px rgba(255,200,60,0.75));}
+  .die.rolling #sym2,.die.holding #sym2{animation:symFlash 0.65s ease both;}
+  .die.holding #sym2{animation-duration:0.3s;animation-iteration-count:infinite;}
+
   /* Rolled state */
   .die.rolled .die-number{
     color:#fffae8;
@@ -240,33 +246,22 @@
               <stop offset="100%" stop-color="#07090f"/>
             </radialGradient>
             <radialGradient id="glow-grad2" cx="50%" cy="50%" r="45%">
-              <stop offset="0%" stop-color="rgba(240,200,80,0.25)"/>
+              <stop offset="0%" stop-color="rgba(240,200,80,0.22)"/>
               <stop offset="100%" stop-color="rgba(240,200,80,0)"/>
             </radialGradient>
-            <!-- Dark overlay gradient to kill photo background -->
-            <radialGradient id="dark-overlay" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="rgba(0,0,0,0.45)"/>
-              <stop offset="100%" stop-color="rgba(0,0,0,0.82)"/>
-            </radialGradient>
           </defs>
-          <!-- Black base -->
           <polygon points="50,2 79,11 98,35 98,65 79,89 50,98 21,89 2,65 2,35 21,11"
             fill="url(#bg-grad2)" clip-path="url(#clip2)"/>
-          <!-- Sign image -->
-          <image id="signImg" href="" x="0" y="0" width="100" height="100"
-            clip-path="url(#clip2)" preserveAspectRatio="xMidYMid slice"
-            style="display:none; mix-blend-mode:lighten; opacity:0.75"/>
-          <!-- Dark vignette to kill photo bg, keep glowing symbol -->
-          <polygon id="darkOverlay2" points="50,2 79,11 98,35 98,65 79,89 50,98 21,89 2,65 2,35 21,11"
-            fill="url(#dark-overlay)" clip-path="url(#clip2)" style="display:none"/>
           <polygon id="glow2" points="50,2 79,11 98,35 98,65 79,89 50,98 21,89 2,65 2,35 21,11"
             fill="url(#glow-grad2)" clip-path="url(#clip2)" opacity="0" style="transition:opacity 0.4s"/>
           <polygon points="50,2 79,11 98,35 98,65 79,89 50,98 21,89 2,65 2,35 21,11"
             fill="none" stroke="rgba(180,155,85,0.55)" stroke-width="1"/>
           <polygon points="50,8 76,16 93,38 93,62 76,84 50,92 24,84 7,62 7,38 24,16"
             fill="none" stroke="rgba(180,155,85,0.12)" stroke-width="0.6"/>
+          <text id="sym2" x="50" y="52" text-anchor="middle" dominant-baseline="central"
+            font-family="'Segoe UI Symbol','Apple Symbols','Symbola',serif"
+            font-size="28" fill="#f0d98a" font-variant-emoji="text">·</text>
         </svg>
-        <div class="die-symbol" id="sym2"></div>
       </div>
     </div>
 
@@ -374,12 +369,7 @@ let shuffleSpd = 120;    // 初始洗牌速度 (ms)，會隨時間加快
 function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
 
 function applySign(sign){
-  const img=document.getElementById('signImg');
   const sym=document.getElementById('sym2');
-  const overlay=document.getElementById('darkOverlay2');
-  img.style.display='none';
-  overlay.style.display='none';
-  sym.style.display='flex';
   sym.textContent=SIGN_SYM[sign.key];
 }
 
@@ -470,12 +460,7 @@ function stopHolding(){
     // result strip
     document.getElementById('r1').textContent=house;
     const r2=document.getElementById('r2');
-    const src=SIGN_IMGS[sign.key];
-    if(src){
-      r2.innerHTML=`<svg class="r-sign-svg" viewBox="0 0 100 100"><defs><clipPath id="rclip"><circle cx="50" cy="50" r="50"/></clipPath></defs><image href="${src}" x="0" y="0" width="100" height="100" clip-path="url(#rclip)" preserveAspectRatio="xMidYMid slice"/></svg>`;
-    } else {
-      r2.innerHTML=`<span class="r-sym">${SIGN_SYM[sign.key]}</span>`;
-    }
+    r2.innerHTML=`<span class="r-sym">${SIGN_SYM[sign.key]}</span>`;
     document.getElementById('r3').textContent=PLANET_SYM[planet.key];
     document.getElementById('rname').textContent=`${sign.name}・${planet.name}`;
     document.getElementById('resultStrip').classList.add('visible');

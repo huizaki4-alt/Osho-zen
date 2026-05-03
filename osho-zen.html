@@ -106,7 +106,7 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 .pos-label{font-size:10px;letter-spacing:4px;color:var(--text-dim);text-align:center;height:16px}
 
 /* CARD FLIP */
-.card-wrap{width:var(--card-w);height:var(--card-h);perspective:1200px;cursor:pointer}
+.card-wrap{width:var(--card-w);height:var(--card-h);perspective:1200px;cursor:pointer;touch-action:manipulation}
 .card-wrap.waiting{animation:cardFloat 4s ease-in-out infinite}
 @keyframes cardFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .card-wrap.revealed{animation:none;cursor:default}

@@ -672,10 +672,20 @@ body {
   width: 100%; height: 100%;
   display: block;
   object-fit: contain;
+  transition: transform 0.5s ease;
 }
+.r-card.reversed .r-front img { transform: rotate(180deg); }
 .r-card.flipped .r-front {
   box-shadow: none;
 }
+
+.orient-tag {
+  display: inline-block; font-size: 10px; letter-spacing: 2px;
+  padding: 1px 7px; border-radius: 2px; margin-left: 8px;
+  vertical-align: middle;
+}
+.orient-tag.upr { color: var(--gold2); border: 1px solid rgba(200,169,110,0.4); }
+.orient-tag.rev { color: #c07070; border: 1px solid rgba(192,112,112,0.4); }
 
 /* Card sizes for result */
 .sz-lg { --cw: 130px; --ch: 206px; }
@@ -1392,27 +1402,27 @@ function confirmSelection() {
 // ═══════════════════════════════════
 function showResult() {
   showScreen('s-result');
-  // Get hex data for selected cards (in order)
   const hexs = selectedIdx.map(pos => HEX[deckOrder[pos] + 1]);
-  renderSpread(hexs);
+  const revs = hexs.map(() => Math.random() < 0.5);
+  renderSpread(hexs, revs);
 }
 
-function renderSpread(hexs) {
+function renderSpread(hexs, revs) {
   const display = document.getElementById('spread-display');
   const detail  = document.getElementById('detail-area');
   display.innerHTML = '';
   detail.innerHTML  = '';
 
   if (drawMode === 1) {
-    renderSingle(hexs[0], display, detail);
+    renderSingle(hexs[0], display, detail, revs[0]);
   } else if (drawMode === 3) {
-    render3Card(hexs, display, detail);
+    render3Card(hexs, display, detail, revs);
   } else {
-    render5Card(hexs, display, detail);
+    render5Card(hexs, display, detail, revs);
   }
 }
 
-function makeRCard(h, szClass, delay) {
+function makeRCard(h, szClass, delay, rev) {
   const wrap = document.createElement('div');
   wrap.className = 'r-card-wrap';
 
@@ -1423,7 +1433,6 @@ function makeRCard(h, szClass, delay) {
       <div class="r-back"><img class="card-brush-circle" id="enso-back-tmp" src="" alt=""/></div>
       <div class="r-front"><img src="${CARDS[h[0]-1]}" alt="${h[1]}"></div>
     </div>`;
-  // 用 ENSO_SRC 設定禪圈背面
   const backImg = card.querySelector('#enso-back-tmp');
   if (backImg) { backImg.src = ENSO_SRC; backImg.removeAttribute('id'); }
 
@@ -1436,32 +1445,33 @@ function makeRCard(h, szClass, delay) {
 
   setTimeout(() => {
     card.classList.add('flipped');
+    if (rev) card.classList.add('reversed');
     wrap.classList.add('revealed');
   }, delay);
 
   return wrap;
 }
 
-function renderSingle(h, display, detail) {
+function renderSingle(h, display, detail, rev) {
   const div = document.createElement('div');
   div.className = 'spread-1';
-  const cw = makeRCard(h, 'sz-lg', 400);
+  const cw = makeRCard(h, 'sz-lg', 400, rev);
   div.appendChild(cw);
   display.appendChild(div);
 
-  const drawer = makeDrawer(null, h, 0);
+  const drawer = makeDrawer(null, h, 0, rev);
   drawer.style.width = '100%';
   drawer.style.maxWidth = '480px';
   detail.appendChild(drawer);
   setTimeout(() => drawer.classList.add('show'), 1100);
 }
 
-function render3Card(hexs, display, detail) {
+function render3Card(hexs, display, detail, revs) {
   const labels = SPREAD_META[3];
   const div = document.createElement('div');
   div.className = 'spread-3';
   hexs.forEach((h, i) => {
-    const cw = makeRCard(h, 'sz-md', 350 + i * 300);
+    const cw = makeRCard(h, 'sz-md', 350 + i * 300, revs[i]);
     div.appendChild(cw);
   });
   display.appendChild(div);
@@ -1469,14 +1479,14 @@ function render3Card(hexs, display, detail) {
   const mc = document.createElement('div');
   mc.className = 'multi-cards-detail';
   hexs.forEach((h, i) => {
-    const item = makeMultiItem(labels[i].label, labels[i].desc, h);
+    const item = makeMultiItem(labels[i].label, labels[i].desc, h, revs[i]);
     mc.appendChild(item);
     setTimeout(() => item.classList.add('show'), 1300 + i * 200);
   });
   detail.appendChild(mc);
 }
 
-function render5Card(hexs, display, detail) {
+function render5Card(hexs, display, detail, revs) {
   const labels = SPREAD_META[5];
   const grid = document.createElement('div');
   grid.className = 'spread-5';
@@ -1512,6 +1522,7 @@ function render5Card(hexs, display, detail) {
 
     setTimeout(() => {
       card.classList.add('flipped');
+      if (revs[i]) card.classList.add('reversed');
       cell.classList.add('revealed');
     }, delays[i]);
   });
@@ -1520,19 +1531,20 @@ function render5Card(hexs, display, detail) {
   const mc = document.createElement('div');
   mc.className = 'multi-cards-detail';
   hexs.forEach((h, i) => {
-    const item = makeMultiItem(labels[i].label, labels[i].desc, h);
+    const item = makeMultiItem(labels[i].label, labels[i].desc, h, revs[i]);
     mc.appendChild(item);
     setTimeout(() => item.classList.add('show'), 1500 + i * 180);
   });
   detail.appendChild(mc);
 }
 
-function makeDrawer(pos, h, delay) {
+function makeDrawer(pos, h, delay, rev) {
   const d = document.createElement('div');
   d.className = 'detail-drawer';
+  const orientTag = `<span class="orient-tag ${rev ? 'rev' : 'upr'}">${rev ? '逆位' : '正位'}</span>`;
   d.innerHTML = `
     <div class="drawer-body">
-      <div class="dr-num">第 ${h[0]} 卦 · ${h[2]}</div>
+      <div class="dr-num">第 ${h[0]} 卦 · ${h[2]}${orientTag}</div>
       <div class="dr-namerow">
         <div class="dr-name">${h[1]}</div>
       </div>
@@ -1542,13 +1554,14 @@ function makeDrawer(pos, h, delay) {
   return d;
 }
 
-function makeMultiItem(pos, posDesc, h) {
+function makeMultiItem(pos, posDesc, h, rev) {
   const item = document.createElement('div');
   item.className = 'mcd-item';
+  const orientTag = `<span class="orient-tag ${rev ? 'rev' : 'upr'}">${rev ? '逆位' : '正位'}</span>`;
   item.innerHTML = `
     <div class="mcd-pos">${pos} · ${posDesc}</div>
     <span class="mcd-name">${h[1]}</span>
-    <span style="font-size:11px;color:var(--muted)">第${h[0]}卦 · ${h[2]}</span>
+    <span style="font-size:11px;color:var(--muted)">第${h[0]}卦 · ${h[2]}${orientTag}</span>
     <div class="mcd-meaning">${h[3]}</div>
     <div class="mcd-desc">${h[4]}</div>`;
   return item;

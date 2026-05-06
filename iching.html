@@ -1563,7 +1563,6 @@ function makeMultiItem(pos, posDesc, h, rev) {
   const orientTag = `<span class="orient-tag ${rev ? 'rev' : 'upr'}">${rev ? '逆位' : '正位'}</span>`;
   const yaoLine = rev ? `<div class="dr-yao">第 ${h[0] % 6 || 6} 爻為變爻</div>` : '';
   item.innerHTML = `
-    <div class="mcd-pos">${pos} · ${posDesc}</div>
     <span class="mcd-name">${h[1]}</span>
     <span style="font-size:11px;color:var(--muted)">第${h[0]}卦 · ${h[2]}${orientTag}</span>
     ${yaoLine}

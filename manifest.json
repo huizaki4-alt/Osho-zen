@@ -1,0 +1,15 @@
+{
+  "name": "占卜工具",
+  "short_name": "占卜",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#07060a",
+  "theme_color": "#07060a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%2307060a'/><circle cx='96' cy='96' r='70' stroke='%23c9a96e' stroke-width='2' fill='none'/><circle cx='96' cy='96' r='45' stroke='%23c9a96e' stroke-width='1.5' fill='none' opacity='.6'/><circle cx='96' cy='96' r='8' fill='%23c9a96e' opacity='.8'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

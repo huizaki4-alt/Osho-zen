@@ -47,6 +47,7 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 .tool-card .tool-arrow{position:absolute;right:20px;top:50%;transform:translateY(-50%);color:rgba(201,169,110,0.3);font-size:14px;transition:color .3s,transform .3s}
 .tool-card:hover .tool-arrow{color:rgba(201,169,110,0.7);transform:translateY(-50%) translateX(3px)}
 </style>
+<link rel="manifest" href="manifest.json">
 </head>
 <body>
 <div class="page">
@@ -83,5 +84,6 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
     </a>
   </div>
 </div>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>

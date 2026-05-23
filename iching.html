@@ -849,6 +849,7 @@ body {
 }
 .home-link{position:fixed;top:14px;left:14px;z-index:9999;color:rgba(200,169,110,0.45);font-size:11px;letter-spacing:3px;font-family:"Noto Serif TC",serif;text-decoration:none;transition:color .2s}.home-link:hover{color:#c8a96e}
 </style>
+<link rel="manifest" href="manifest.json">
 </head>
 <body>
 <a href="index.html" class="home-link">← 主頁</a>
@@ -1589,5 +1590,6 @@ function goShuffle() {
   showScreen('s-shuffle');
 }
 </script>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>

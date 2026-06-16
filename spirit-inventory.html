@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spirit Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07060a;
+  --gold:#c9a96e;
+  --gold-dim:rgba(201,169,110,0.06);
+  --gold-glow:rgba(201,169,110,0.12);
+  --border:#211d2a;
+  --border-lit:#3d3450;
+  --text:#ccc0a8;
+  --text-dim:#6b6050;
+  --ordered:#c9a96e;
+  --ordered-bg:rgba(201,169,110,0.08);
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:"Noto Serif TC",serif;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(138,92,192,.05) 0%,transparent 70%),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(201,169,110,.03) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+.page{position:relative;z-index:1;width:100%;max-width:720px;margin:0 auto;padding:48px 24px 80px}
+
+.header{text-align:center;margin-bottom:48px}
+.header-title{font-family:"Cinzel",serif;font-size:clamp(16px,4vw,22px);letter-spacing:.35em;color:var(--gold);margin-bottom:6px}
+.header-sub{font-size:11px;letter-spacing:.3em;color:var(--text-dim)}
+
+.ornament{display:flex;align-items:center;gap:12px;margin:24px 0}
+.ornament-line{flex:1;height:1px;background:linear-gradient(to right,transparent,var(--border-lit))}
+.ornament-line.rev{background:linear-gradient(to left,transparent,var(--border-lit))}
+.ornament-symbol{color:var(--gold);font-size:8px;opacity:.6}
+
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px;justify-content:center}
+.filter-btn{font-family:"Cinzel",serif;font-size:9px;letter-spacing:.2em;color:var(--text-dim);border:1px solid var(--border);background:transparent;padding:6px 14px;cursor:pointer;border-radius:2px;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.filter-btn:hover,.filter-btn.active{color:var(--gold);border-color:var(--border-lit);background:var(--gold-dim)}
+
+.category{margin-bottom:40px}
+.category-header{font-family:"Cinzel",serif;font-size:10px;letter-spacing:.4em;color:var(--gold);margin-bottom:12px;opacity:.8;text-transform:uppercase}
+
+.item{display:grid;grid-template-columns:32px 90px 1fr 28px;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);transition:background .2s}
+.item:first-of-type{border-top:1px solid var(--border)}
+.item.ordered{background:var(--ordered-bg)}
+.item.hidden{display:none}
+
+.item-qty{font-family:"Cinzel",serif;font-size:13px;color:var(--gold);text-align:center;opacity:.9}
+.item-qty.zero{opacity:0}
+.item-sku{font-size:10px;color:var(--text-dim);letter-spacing:.05em;font-variant-numeric:tabular-nums}
+.item-name{font-size:12px;letter-spacing:.05em;line-height:1.4}
+.item-name.ordered-name{color:var(--text)}
+.item-name.unordered-name{color:var(--text-dim)}
+.item-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);opacity:.6;justify-self:center}
+.item-dot.hidden-dot{opacity:0}
+
+.legend{display:flex;gap:24px;justify-content:center;margin-bottom:28px;font-size:10px;letter-spacing:.15em;color:var(--text-dim)}
+.legend-item{display:flex;align-items:center;gap:8px}
+.legend-dot{width:6px;height:6px;border-radius:50%}
+.legend-dot.ord{background:var(--gold)}
+.legend-dot.unord{background:var(--border-lit)}
+
+.summary{text-align:center;margin-top:40px;font-size:10px;letter-spacing:.2em;color:var(--text-dim)}
+
+@media(max-width:480px){
+  .item{grid-template-columns:28px 76px 1fr 20px}
+  .item-sku{font-size:9px}
+  .item-name{font-size:11px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="header-title">SPIRIT INVENTORY</div>
+    <div class="header-sub">酒水存貨</div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot ord"></div>已訂</div>
+    <div class="legend-item"><div class="legend-dot unord"></div>未訂</div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">ALL</button>
+    <button class="filter-btn" data-filter="ordered">ORDERED</button>
+    <button class="filter-btn" data-filter="Spirit">SPIRIT</button>
+    <button class="filter-btn" data-filter="Prosecco">PROSECCO</button>
+    <button class="filter-btn" data-filter="Champagne">CHAMPAGNE</button>
+    <button class="filter-btn" data-filter="Beer">BEER</button>
+    <button class="filter-btn" data-filter="Soft Drinks">SOFT DRINKS</button>
+    <button class="filter-btn" data-filter="Juices">JUICES</button>
+    <button class="filter-btn" data-filter="Water">WATER</button>
+  </div>
+
+  <div id="inventory"></div>
+
+  <div class="ornament"><div class="ornament-line"></div><span class="ornament-symbol">◆</span><div class="ornament-line rev"></div></div>
+  <div class="summary" id="summary"></div>
+</div>
+
+<script>
+const data = [
+  {cat:"Spirit",qty:1,  sku:"340747",name:"Aperol 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"175109",name:"Dubonnet 75cl Single"},
+  {cat:"Spirit",qty:0,  sku:"319686",name:"Pernod Absinthe 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"175109",name:"Pernod Pastis 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"353943",name:"Suze De Gentiane 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"160769",name:"Bailey's 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"150250",name:"Benedictine 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"100966",name:"Campari 70cl Single"},
+  {cat:"Spirit",qty:1,  sku:"161113",name:"Cointreau 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"160174",name:"Disaronno Amaretto 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"163906",name:"Jagermeister 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"164650",name:"Luxardo White Sambuca 70cl Single"},
+  {cat:"Spirit",qty:1,  sku:"304568",name:"Cherry Heering 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"502905",name:"Giffard 'Abricot Du Roussillon' Liqueur 70cl Single"},
+  {cat:"Spirit",qty:1,  sku:"361833",name:"Giffard Blue Curacao Liqueur 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"361851",name:"Giffard Passion Fruit Liqueur 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"357503",name:"Kahlua 'Coffee' Liqueur 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"304606",name:"Kwai Feh Lychee Liqueur 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"502384",name:"Luxardo 'Maraschino' 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"165237",name:"Mandarine Napoléon 70cl Single"},
+  {cat:"Spirit",qty:2,  sku:"165027",name:"Midori Melon 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"303376",name:"Mozart 'Dark' Chocolate 50cl Single"},
+  {cat:"Spirit",qty:1,  sku:"304613",name:"Mozart 'White' Vanilla 50cl Single"},
+  {cat:"Spirit",qty:0,  sku:"137828",name:"Southern Comfort 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"304731",name:"St Germain Elderflower 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"371927",name:"Antica Formula 1 Ltr Single"},
+  {cat:"Spirit",qty:0,  sku:"192545",name:"Noilly Prat Dry 75cl"},
+  {cat:"Spirit",qty:0,  sku:"362369",name:"Mancino Secco 'Dry' 75cl Single"},
+  {cat:"Spirit",qty:0,  sku:"362371",name:"Mancino 'Rosso Amaranto' 75cl Single"},
+  {cat:"Spirit",qty:1,  sku:"502954",name:"Mancino 'Sakura' 50cl Single"},
+  {cat:"Spirit",qty:0,  sku:"504389",name:"The Japanese Bitters 'Shiso' 10cl Single"},
+  {cat:"Spirit",qty:0,  sku:"504390",name:"The Japanese Bitters 'Yuzu' 10cl Single"},
+  {cat:"Spirit",qty:0,  sku:"504391",name:"The Japanese Bitters 'Umami' 10cl Single"},
+  {cat:"Spirit",qty:0,  sku:"160224",name:"Angostura 20cl Single"},
+  {cat:"Spirit",qty:0,  sku:"303108",name:"Angostura 'Orange' 10cl Single"},
+  {cat:"Spirit",qty:1,  sku:"502610",name:"Suntory 'Haku' Vodka 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"140054",name:"Absolut 'Citron' 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"301916",name:"Belvedere Vodka 70cl Single"},
+  {cat:"Spirit",qty:2,  sku:"370821",name:"Suntory 'Roku' Gin 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"140553",name:"Bombay Sapphire 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"304590",name:"Tanqueray No. 10 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"504880",name:"Kiyomi Rum 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"506296",name:"Equiano Light Rum 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"503382",name:"Equiano Afro Caribbean Rum 70cl Single"},
+  {cat:"Spirit",qty:3,  sku:"301562",name:"Jose Cuervo Silver Classico 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"303326",name:"Patron Reposado 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"361093",name:"San Cosme Tequila 70cl Single"},
+  {cat:"Spirit",qty:1,  sku:"503512",name:"Nikka 'Days' Japanese Blended 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"360196",name:"Nikka Yoichi 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"365284",name:"Suntory Hibiki 'Harmony' 70cl Single"},
+  {cat:"Spirit",qty:1,  sku:"303484",name:"Suntory Yamazaki 12 Year Old 70cl Single"},
+  {cat:"Spirit",qty:1,  sku:"",      name:"Johnnie Walker Red Label 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"134038",name:"Johnnie Walker Blue Label 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"134799",name:"Jack Daniel's 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"156231",name:"Remy Martin VSOP 70cl Single"},
+  {cat:"Spirit",qty:0,  sku:"156080",name:"Remy Martin XO Cognac 70cl Single"},
+  {cat:"Prosecco",qty:0,sku:"364377",name:"Bottega Liquid Gold 20cl Single"},
+  {cat:"Prosecco",qty:0,sku:"364378",name:"Bottega Liquid 'Rose' Gold 20cl Single"},
+  {cat:"Prosecco",qty:0,sku:"113070",name:"Pronol DOC Prosecco (White) 11% 75cl Single"},
+  {cat:"Champagne",qty:0,sku:"502743",name:"Poilvert Jacques Brut NV Champagne 75cl Single"},
+  {cat:"Beer",qty:0,   sku:"371109",name:"Asahi Super Dry 5% — 11-Gal Keg"},
+  {cat:"Beer",qty:0,   sku:"500680",name:"Asahi Super Dry 5% — 30-Ltr Keg (Small)"},
+  {cat:"Beer",qty:0,   sku:"505403",name:"Sapporo Lager 4.9% — 50-Ltr Keg"},
+  {cat:"Beer",qty:0,   sku:"504994",name:"Asahi Super Dry 'Alcohol Free' 0.0% — 24×330ml NRB"},
+  {cat:"Beer",qty:0,   sku:"3x0252",name:"Kirin Ichiban 5% 24×330ml NRB"},
+  {cat:"Soft Drinks",qty:1,sku:"301460",name:"Coca-Cola (glass) 24×200ml NRB"},
+  {cat:"Soft Drinks",qty:2,sku:"371580",name:"Coca-Cola 'Zero' (glass) 24×200ml NRB"},
+  {cat:"Soft Drinks",qty:0,sku:"362339",name:"Fever-Tree Tonic Water (glass) 24×200ml"},
+  {cat:"Soft Drinks",qty:1,sku:"362344",name:"Fever-Tree Lemonade (glass) 24×200ml"},
+  {cat:"Soft Drinks",qty:1,sku:"362346",name:"Fever-Tree Soda Water (glass) 24×200ml"},
+  {cat:"Soft Drinks",qty:0,sku:"358453",name:"Fever-Tree 'Pink Grapefruit' Soda (glass) 24×200ml"},
+  {cat:"Soft Drinks",qty:0,sku:"355089",name:"Fever-Tree 'Italian Blood Orange' Soda (glass) 24×200ml"},
+  {cat:"Soft Drinks",qty:1,sku:"355087",name:"Fever-Tree 'Mexican Lime & Yuzu' Soda (glass) 24×200ml"},
+  {cat:"Soft Drinks",qty:2,sku:"362345",name:"Fever-Tree Ginger Ale (glass) 24×200ml"},
+  {cat:"Soft Drinks",qty:2,sku:"360861",name:"Fever-Tree Ginger Beer (glass) 24×200ml"},
+  {cat:"Soft Drinks",qty:0,sku:"505591",name:"Saicho 'Jasmine' Sparkling Cold Brewed Tea 20cl Single"},
+  {cat:"Soft Drinks",qty:0,sku:"505592",name:"Saicho 'Darjeeling' Sparkling Cold Brewed Tea 20cl Single"},
+  {cat:"Juices",qty:0,  sku:"25031", name:"Rubicon Lychee Juice 12×1-Ltr"},
+  {cat:"Juices",qty:0,  sku:"25582", name:"Rubicon Mango Juice 12×1-Ltr"},
+  {cat:"Juices",qty:0,  sku:"25603", name:"Rubicon Passion Juice 12×1-Ltr"},
+  {cat:"Juices",qty:0,  sku:"28129", name:"SunPride Pineapple Juice 12×1-Ltr"},
+  {cat:"Water",qty:2,   sku:"302341",name:"Hildon Still 12×750ml (glass)"},
+  {cat:"Water",qty:1,   sku:"302339",name:"Hildon Still 24×330ml (glass)"},
+  {cat:"Water",qty:2,   sku:"302342",name:"Hildon Sparkling 12×750ml (glass)"},
+  {cat:"Water",qty:2,   sku:"302340",name:"Hildon Sparkling 24×330ml (glass)"},
+];
+
+const categories = [...new Set(data.map(d=>d.cat))];
+let currentFilter = 'all';
+
+function render(filter) {
+  const inv = document.getElementById('inventory');
+  inv.innerHTML = '';
+
+  let totalOrdered = 0, totalItems = 0;
+
+  categories.forEach(cat => {
+    const items = data.filter(d => d.cat === cat);
+    const visibleItems = items.filter(d => {
+      if (filter === 'ordered') return d.qty > 0;
+      if (filter === 'all') return true;
+      if (filter === cat) return true;
+      return false;
+    });
+    if (visibleItems.length === 0) return;
+
+    const section = document.createElement('div');
+    section.className = 'category';
+
+    const hdr = document.createElement('div');
+    hdr.className = 'category-header';
+    hdr.textContent = cat.toUpperCase();
+    section.appendChild(hdr);
+
+    visibleItems.forEach(d => {
+      const row = document.createElement('div');
+      row.className = 'item' + (d.qty > 0 ? ' ordered' : '');
+
+      const qty = document.createElement('div');
+      qty.className = 'item-qty' + (d.qty === 0 ? ' zero' : '');
+      qty.textContent = d.qty || '·';
+
+      const sku = document.createElement('div');
+      sku.className = 'item-sku';
+      sku.textContent = d.sku || '—';
+
+      const name = document.createElement('div');
+      name.className = 'item-name ' + (d.qty > 0 ? 'ordered-name' : 'unordered-name');
+      name.textContent = d.name;
+
+      const dot = document.createElement('div');
+      dot.className = 'item-dot' + (d.qty === 0 ? ' hidden-dot' : '');
+
+      row.append(qty, sku, name, dot);
+      section.appendChild(row);
+
+      if (d.qty > 0) totalOrdered++;
+      totalItems++;
+    });
+
+    inv.appendChild(section);
+  });
+
+  document.getElementById('summary').textContent =
+    `${totalOrdered} ordered · ${totalItems} total`;
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    render(currentFilter);
+  });
+});
+
+render('all');
+</script>
+</body>
+</html>

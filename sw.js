@@ -1,4 +1,4 @@
-const CACHE = 'divination-v3';
+const CACHE = 'divination-v4';
 const FILES = [
   './index.html',
   './osho-zen.html',

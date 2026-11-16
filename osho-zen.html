@@ -38,6 +38,8 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 .btn-muted{border-color:var(--border-lit);color:var(--text-dim);padding:10px 28px;font-size:11px}
 .btn-muted:hover{border-color:var(--gold);color:var(--gold);background:transparent}
 .home-link{display:inline-block;margin-top:20px;color:rgba(201,169,110,0.4);font-size:11px;letter-spacing:3px;font-family:"Noto Serif TC",serif;text-decoration:none;transition:color .2s}.home-link:hover{color:var(--gold)}
+.q-input{width:min(280px,78vw);margin:0 0 22px;background:transparent;border:none;border-bottom:1px solid rgba(201,169,110,.3);color:var(--text);font-family:inherit;font-size:14px;letter-spacing:1px;text-align:center;padding:10px 4px;outline:none;-webkit-user-select:text;user-select:text;touch-action:manipulation}
+.q-input::placeholder{color:var(--text-dim);letter-spacing:2px}
 .back-btn{position:fixed;top:20px;left:20px;z-index:100;background:none;border:none;color:var(--text-dim);font-family:"Noto Serif TC",serif;font-size:11px;letter-spacing:3px;cursor:pointer;transition:color .2s;padding:8px}
 .back-btn:hover{color:var(--gold)}
 
@@ -190,6 +192,7 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
     <span class="ornament-symbol">◆</span>
     <div class="ornament-line rev"></div>
   </div>
+  <input id="reading-q" class="q-input fade-in fade-in-3" type="text" maxlength="80" placeholder="想問的問題（可留空）" autocomplete="off">
   <button class="btn fade-in fade-in-3" onclick="goToSpread()">開 始 占 卜</button>
   <a href="index.html" class="home-link fade-in fade-in-3">← 主頁</a>
 </div>
@@ -265,6 +268,7 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 </div>
 
 
+<script src="./history.js"></script>
 <script>
 var CARDS=[
   {name:'The Fool',suit:'major'},
@@ -628,6 +632,8 @@ function startDrawing() {
   S.revealedCount = 0;
   S.drawn = [];
   S.appendedCards = [];
+  S.historyId = null;
+  S.historyTs = null;
 
   breathActive = false;
   clearInterval(shuffleTimer); shuffleTimer = null;
@@ -807,6 +813,115 @@ function appendOneCard(card) {
 }
 
 
+function currentQuestion() {
+  var el = document.getElementById('reading-q');
+  return el ? el.value.trim() : '';
+}
+
+function oshoModeLabel() {
+  if (S.spreadType === 'single') return '單牌';
+  if (S.spreadType === 'three') return '三牌';
+  if (S.spreadType === 'cross') return '十字牌陣';
+  return (S.positions.length || 1) + '張';
+}
+
+function saveOshoReading() {
+  if (!window.DivinationHistory) return;
+  if (!S.historyId) S.historyId = DivinationHistory.uid('osho');
+  var names = S.drawn.map(function(c){ return c.name; });
+  var extra = S.appendedCards.map(function(c){ return c.name; });
+  var q = currentQuestion();
+  var rec = {
+    id: S.historyId,
+    page: 'osho',
+    mode: S.spreadType,
+    modeLabel: oshoModeLabel(),
+    question: q,
+    summary: names.concat(extra).join(' · '),
+    cards: names,
+    appended: extra,
+    positions: S.positions.slice(),
+    spreadType: S.spreadType,
+    displayOrder: S.displayOrder
+  };
+  if (S.historyTs) rec.ts = S.historyTs;
+  DivinationHistory.save('osho', rec);
+}
+
+function paintAppendedOpen() {
+  if (!S.appendedCards.length) return;
+  var cp = document.getElementById('cards-phase');
+  var ra = document.getElementById('reveal-actions');
+  var sep = document.createElement('div');
+  sep.id = 'append-sep';
+  sep.className = 'ornament';
+  sep.style.cssText = 'margin:28px 0 12px;width:55%';
+  sep.innerHTML = '<div class="ornament-line"></div><span class="ornament-symbol">◆</span><div class="ornament-line rev"></div>';
+  cp.insertBefore(sep, ra);
+  var ast = document.createElement('div');
+  ast.id = 'append-stage';
+  ast.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:20px;width:100%';
+  cp.insertBefore(ast, ra);
+  var backTpl = document.querySelector('#cards-stage .card-back');
+  S.appendedCards.forEach(function(c) {
+    var col = document.createElement('div');
+    col.className = 'card-col';
+    var wrap = document.createElement('div');
+    wrap.className = 'card-wrap revealed';
+    wrap.onclick = function(){ openLightbox(c.name); };
+    var inner = document.createElement('div');
+    inner.className = 'card-inner flipped';
+    inner.style.transition = 'none';
+    if (backTpl) inner.appendChild(backTpl.cloneNode(true));
+    var front = document.createElement('div');
+    front.className = 'card-front';
+    front.innerHTML = '<div class="card-img-zone"><img src="'+getCardImg(c.name)+'" alt="'+c.name+'"></div>';
+    inner.appendChild(front);
+    wrap.appendChild(inner);
+    col.appendChild(wrap);
+    ast.appendChild(col);
+  });
+}
+
+function reopenOsho(rec) {
+  S.positions = (rec.positions || ['']).slice();
+  S.spreadType = rec.spreadType || 'single';
+  S.displayOrder = rec.displayOrder || null;
+  S.drawn = (rec.cards || []).map(function(name){
+    var found = null;
+    for (var i=0;i<CARDS.length;i++) if (CARDS[i].name === name) found = CARDS[i];
+    return found || {name:name, suit:''};
+  });
+  S.appendedCards = (rec.appended || []).map(function(name){
+    var found = null;
+    for (var i=0;i<CARDS.length;i++) if (CARDS[i].name === name) found = CARDS[i];
+    return found || {name:name, suit:''};
+  });
+  S.revealedCount = 0;
+  S.historyId = rec.id;
+  S.historyTs = rec.ts;
+  var qEl = document.getElementById('reading-q');
+  if (qEl) qEl.value = rec.question || '';
+  document.getElementById('breath-phase').style.display = 'none';
+  document.getElementById('shuffle-phase').style.display = 'none';
+  document.getElementById('cards-phase').style.display = 'flex';
+  goTo('screen-drawing');
+  var savedAppended = S.appendedCards.slice();
+  S.appendedCards = [];
+  renderCards();
+  var order = S.displayOrder || S.drawn.map(function(_,i){return i;});
+  for (var i=0;i<order.length;i++) {
+    var inn = document.getElementById('ci-inner-'+i);
+    var wrp = document.getElementById('cw-'+i);
+    if (inn) { inn.style.transition = 'none'; inn.classList.add('flipped'); }
+    if (wrp) { wrp.classList.remove('waiting'); wrp.classList.add('revealed'); }
+  }
+  S.revealedCount = order.length;
+  S.appendedCards = savedAppended;
+  paintAppendedOpen();
+  showActions();
+}
+
 function showActions() {
   var box = document.getElementById('reveal-actions');
   box.style.display = 'flex';
@@ -821,6 +936,9 @@ function showActions() {
   h += '<button class="btn" onclick="showSelectionGrid(true)">追 加 一 牌</button>';
   h += '<button class="btn btn-muted" onclick="goTo(\'screen-home\')" style="margin-top:4px;">回 到 首 頁</button>';
   box.innerHTML = h;
+  var q = currentQuestion();
+  if (q) document.getElementById('drawing-hint').textContent = q;
+  saveOshoReading();
 }
 
 function openLightbox(name) {
@@ -835,6 +953,7 @@ function closeLightbox() {
   document.body.style.overflow = '';
 }
 </script>
+<script>DivinationHistory.attach({ page: 'osho', reopen: reopenOsho });</script>
 
 
 <div id="lightbox" onclick="closeLightbox()">

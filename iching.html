@@ -556,6 +556,13 @@ body {
   background: linear-gradient(135deg, #2e2a1e, #1a160c);
   box-shadow: 0 0 28px rgba(200,169,110,0.35);
 }
+.q-input{
+  width:min(280px,86vw);margin:-8px 0 22px;background:transparent;border:none;
+  border-bottom:1px solid rgba(200,169,110,.28);color:var(--text);font-family:inherit;
+  font-size:13px;letter-spacing:1px;text-align:center;padding:8px 4px;outline:none;
+  user-select:text;-webkit-user-select:text;touch-action:manipulation;
+}
+.q-input::placeholder{color:var(--muted);letter-spacing:2px}
 
 /* ══════════════════════════════════
    SCREEN 3 — RESULT
@@ -904,6 +911,7 @@ body {
     <button class="mode-tab" data-m="3" onclick="setMode(3)">三牌</button>
     <button class="mode-tab" data-m="5" onclick="setMode(5)">十字牌陣</button>
   </div>
+  <input id="reading-q" class="q-input" type="text" maxlength="80" placeholder="想問的問題（可留空）" autocomplete="off">
 
   <div class="deck-stage" id="deck-stage">
     <div class="shuffle-counter" id="shuf-count">洗牌中⋯</div>
@@ -957,6 +965,7 @@ body {
   </div>
 </div>
 
+<script src="./history.js"></script>
 <script>
 // ═══════════════════════════════════
 // CARD IMAGES (base64 embedded)
@@ -1521,12 +1530,41 @@ function confirmSelection() {
 // ═══════════════════════════════════
 // SCREEN: RESULT
 // ═══════════════════════════════════
+function readingQuestion() {
+  const el = document.getElementById('reading-q');
+  return el ? el.value.trim() : '';
+}
+
 function showResult() {
   showScreen('s-result');
+  const q = readingQuestion();
+  document.getElementById('result-q').textContent = q || '靜心觀之，天地示象';
   const hexs = selectedIdx.map(pos => HEX[deckOrder[pos] + 1]);
   const revs = hexs.map(() => Math.random() < 0.5);
   const bians = revs.map(r => r ? Math.floor(Math.random() * 6) : -1);  // 逆位：隨機一爻變（0=初爻…5=上爻）
   renderSpread(hexs, revs, bians);
+  const labels = {1:'單牌',3:'三牌',5:'十字牌陣'};
+  const summary = hexs.map((h,i) => h[1] + (revs[i] ? (' · 逆 · ' + YAO_POS[bians[i]] + '爻') : ' · 正')).join(' ／ ');
+  DivinationHistory.save('iching', {
+    id: DivinationHistory.uid('iching'),
+    page: 'iching',
+    mode: String(drawMode),
+    modeLabel: labels[drawMode] || (drawMode + '牌'),
+    question: q,
+    summary: summary,
+    hexIds: hexs.map(h => h[0]),
+    revs: revs,
+    bians: bians
+  });
+}
+
+function reopenIching(rec) {
+  drawMode = +rec.mode || (rec.hexIds ? rec.hexIds.length : 1);
+  setMode(drawMode);
+  const hexs = (rec.hexIds || []).map(id => HEX[id]);
+  document.getElementById('result-q').textContent = rec.question || '靜心觀之，天地示象';
+  showScreen('s-result');
+  renderSpread(hexs, rec.revs || [], rec.bians || []);
 }
 
 function renderSpread(hexs, revs, bians) {
@@ -1710,6 +1748,7 @@ function goShuffle() {
   showScreen('s-shuffle');
 }
 </script>
+<script>DivinationHistory.attach({ page: 'iching', reopen: reopenIching });</script>
 <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');</script>
 </body>
 </html>

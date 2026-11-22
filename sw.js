@@ -1,10 +1,9 @@
-const CACHE = 'divination-v5';
+const CACHE = 'divination-v6';
 const FILES = [
   './index.html',
   './osho-zen.html',
   './iching.html',
   './astro-dice.html',
-  './yes-no.html',
   './history.js',
   './favicon.ico',
   './manifest.json'
